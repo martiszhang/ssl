@@ -1,0 +1,37 @@
+---
+- name: refresh  system info
+  setup:
+
+- name: set variable hostname 
+  set_fact: hostname=DNS:{{ ansible_fqdn }}
+
+- name: debug hostname
+  debug: msg="{{ hostname.split() }}" 
+
+
+- name: set variable sub_dns
+  set_fact: sub_dns={{ hostname.split() }}
+
+- name: debug sub_dns
+  debug: msg="{{ sub_dns }}"
+
+- name: set variable sub_ips
+  set_fact: sub_ips={{ ansible_all_ipv4_addresses | map('regex_replace', '^', 'IP:') | list }}
+
+- name: debug ipaddr
+  debug: msg="{{ sub_ips }}" 
+
+- name: set fact
+  set_fact: subject={{ sub_dns + sub_ips }} 
+
+- name: debug
+  debug: msg={{ subject }}
+
+- name: save variable subject to file
+  copy: content="{{ subject }}" dest=/opt/subject.file
+
+- name: set variable test from file
+  set_fact: test="{{ lookup('file', '/opt/subject.file') }}"
+
+- name: debug variable test
+  debug: msg={{ test }}

@@ -1,0 +1,38 @@
+- hosts: local
+  vars: 
+    - time: "{{ lookup('pipe', 'date -d \"+100 year\" +\"%Y%m%d%H%M%S\"') }}"
+  tasks:
+    - name: debug 
+      debug: msg={{ time }}
+    - name: create dir /opt/ssl/rootca 
+      file: path=/opt/ssl/{{ item }} state=directory mode=0755
+      loop:
+       - rootca
+       - ldap
+
+    - name: generate rootca private key
+      openssl_privatekey: path=/opt/ssl/rootca/rootca.key
+
+    - name: Generate an OpenSSL Certificate Signing Request rootca.csr
+      openssl_csr:
+       path: /opt/ssl/rootca/rootca.csr
+       privatekey_path: /opt/ssl/rootca/rootca.key
+       country_name: CN
+       state_or_province_name: Beijing
+       organization_name: Cloud
+       organizational_unit_name: Development
+       common_name: Rootca
+       basic_constraints: "CA: TRUE" 
+ 
+    - name: Generate a Self Signed OpenSSL rootca.crt
+      openssl_certificate: 
+       path: /opt/ssl/rootca/rootca.crt
+       privatekey_path: /opt/ssl/rootca/rootca.key
+       csr_path: /opt/ssl/rootca/rootca.csr
+       selfsigned_not_after: "{{ time }}Z"
+       provider: selfsigned
+
+- hosts: "{{ groupname }}"
+  tasks:
+    - name: debug
+      debug: msg="zhangjunfeng"
